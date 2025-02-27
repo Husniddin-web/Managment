@@ -10,14 +10,34 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Task, TaskStatus } from "./entities/task.entity";
 import { Repository } from "typeorm";
 import { Request } from "express";
+import { Project } from "../project/entities/project.entity";
+import { OrganizationUser } from "../organization/entities/organization-user.entity";
 
 @Injectable()
 export class TaskService {
   constructor(
-    @InjectRepository(Task) private readonly taskRepo: Repository<Task>
+    @InjectRepository(Task) private readonly taskRepo: Repository<Task>,
+    @InjectRepository(OrganizationUser)
+    private readonly orgUserRepo: Repository<OrganizationUser>,
+    @InjectRepository(Project) private readonly projectRepo: Repository<Project>
   ) {}
   async create(createTaskDto: CreateTaskDto, req: any) {
-    console.log(createTaskDto);
+    const { project, workerUser } = createTaskDto;
+    const pro = await this.projectRepo.findOne({
+      where: { id: project },
+      relations: ["organization"],
+    });
+
+    const isBelongOrg = await this.orgUserRepo.findOne({
+      where: {
+        user: { id: workerUser },
+        organization: { id: pro?.organization["id"] },
+      },
+    });
+
+    if (!isBelongOrg) {
+      throw new BadRequestException("This user not belong to this project");
+    }
     const task = this.taskRepo.create({
       ...createTaskDto,
       createdBy: req.user.id,

@@ -5,9 +5,19 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { User } from "../user/entities/user.entity";
 import { Project } from "../project/entities/project.entity";
 import { Task } from "./entities/task.entity";
+import { Organization } from "../organization/entities/organization.entity";
+import { OrganizationUser } from "../organization/entities/organization-user.entity";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Project, Task])],
+  imports: [
+    TypeOrmModule.forFeature([
+      User,
+      Project,
+      Task,
+      Organization,
+      OrganizationUser,
+    ]),
+  ],
   controllers: [TaskController],
   providers: [TaskService],
   exports: [TaskService],
