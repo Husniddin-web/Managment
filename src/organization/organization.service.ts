@@ -71,17 +71,26 @@ export class OrganizationService {
 
   async addUserToOrg(userId: number, orgId: number) {
     const organization = await this.findOne(orgId);
+    if (!organization) {
+      throw new NotFoundException(`Organization with ID "${orgId}" not found`);
+    }
 
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException(`User with ID "${userId}" not found`);
     }
 
-    const orgUser = this.organizationUserRepo.create({
-      user: user,
-      organization: organization,
+    const existingOrgUser = await this.organizationUserRepo.findOne({
+      where: { user: { id: userId } },
     });
 
+    if (existingOrgUser) {
+      throw new BadRequestException(
+        `User is already assigned to an organization`
+      );
+    }
+
+    const orgUser = this.organizationUserRepo.create({ user, organization });
     return this.organizationUserRepo.save(orgUser);
   }
 
@@ -128,8 +137,6 @@ export class OrganizationService {
       ),
     }));
   }
-
- 
 
   async getOverallStats() {
     const organizations = await this.orgRepo.find({

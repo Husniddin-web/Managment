@@ -59,5 +59,6 @@ export class ProjectService {
     console.log("Projects:", projects);
 
     return projects;
+    
   }
 }
